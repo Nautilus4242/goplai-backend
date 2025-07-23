@@ -1,1 +1,1 @@
-# GoPlai Backend
+# GoPlai AI Backend - Auto-deployment ready!
