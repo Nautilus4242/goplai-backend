@@ -1,0 +1,21 @@
+name: Deploy Supabase Functions
+
+on:
+  push:
+    branches: [ main ]
+    paths: 
+      - 'supabase/functions/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+    - run: npm install -g supabase@latest
+    - run: echo "${{ secrets.SUPABASE_ACCESS_TOKEN }}" | supabase auth login --token
+    - run: supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
+    - run: supabase functions deploy --no-verify-jwt
