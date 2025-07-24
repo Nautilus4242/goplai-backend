@@ -32,6 +32,8 @@ serve(async (req) => {
 
     for (const subreddit of defaultSubreddits) {
       try {
+        console.log(`🔍 Fetching r/${subreddit}...`)
+        
         // Fetch Reddit JSON feed (no auth required)
         const redditUrl = `https://www.reddit.com/r/${subreddit}/hot.json?limit=${limit}`
         const response = await fetch(redditUrl, {
@@ -47,12 +49,16 @@ serve(async (req) => {
 
         const data = await response.json()
         const posts = data.data?.children || []
+        console.log(`📝 Found ${posts.length} posts in r/${subreddit}`)
 
         for (const post of posts) {
           const postData = post.data
           
+          console.log(`\n🔍 Checking: "${postData.title}" (Score: ${postData.score})`)
+          
           // Filter for activity-relevant posts
           if (isActivityRelevant(postData)) {
+            console.log(`✅ Post passed filter: "${postData.title}"`)
             const activity = await processRedditPost(postData, city, subreddit)
             if (activity) {
               // Check if activity already exists
@@ -71,9 +77,18 @@ serve(async (req) => {
                 if (!error) {
                   newActivities.push(activity)
                   totalProcessed++
+                  console.log(`✅ Added activity: "${activity.title}"`)
+                } else {
+                  console.log(`❌ Database insert error: ${error.message}`)
                 }
+              } else {
+                console.log(`⚠️ Activity already exists: "${postData.title}"`)
               }
+            } else {
+              console.log(`❌ Failed to process post: "${postData.title}"`)
             }
+          } else {
+            console.log(`❌ Post filtered out: "${postData.title}"`)
           }
         }
 
@@ -112,6 +127,8 @@ function isActivityRelevant(postData: any): boolean {
   const text = (postData.selftext || '').toLowerCase()
   const content = title + ' ' + text
 
+  console.log(`  📝 Content to check: "${content.slice(0, 100)}..."`)
+
   // More comprehensive activity keywords
   const activityKeywords = [
     // Events
@@ -135,15 +152,22 @@ function isActivityRelevant(postData: any): boolean {
 
   // Check for activity keywords
   const hasActivityKeywords = activityKeywords.some(keyword => content.includes(keyword))
-  
-  // Check for exclude keywords
   const hasExcludeKeywords = excludeKeywords.some(keyword => content.includes(keyword))
 
+  console.log(`  🔍 Has activity keywords: ${hasActivityKeywords}`)
+  console.log(`  🚫 Has exclude keywords: ${hasExcludeKeywords}`) 
+  console.log(`  📊 Score: ${postData.score} (min: 5)`)
+  console.log(`  🔞 NSFW: ${postData.over_18}`)
+
   // More lenient scoring and filtering
-  return hasActivityKeywords && 
+  const passes = hasActivityKeywords && 
          !hasExcludeKeywords &&
-         postData.score >= 5 && // Keep minimum score requirement
-         !postData.over_18    // No NSFW content
+         postData.score >= 5 && 
+         !postData.over_18
+
+  console.log(`  📈 Final result: ${passes ? 'PASS' : 'FAIL'}`)
+  
+  return passes
 }
 
 async function processRedditPost(postData: any, city: string, subreddit: string): Promise<any> {
