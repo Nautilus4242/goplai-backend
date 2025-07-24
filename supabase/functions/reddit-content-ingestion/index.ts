@@ -112,37 +112,37 @@ function isActivityRelevant(postData: any): boolean {
   const text = (postData.selftext || '').toLowerCase()
   const content = title + ' ' + text
 
-  // Activity keywords
-  const eventKeywords = [
+  // More comprehensive activity keywords
+  const activityKeywords = [
+    // Events
     'event', 'festival', 'concert', 'show', 'exhibition', 'market', 'fair',
-    'workshop', 'class', 'tour', 'walk', 'meetup', 'gathering'
-  ]
-  
-  const placeKeywords = [
+    'workshop', 'class', 'tour', 'walk', 'meetup', 'gathering', 'live',
+    // Places
     'restaurant', 'cafe', 'bar', 'pub', 'brewery', 'museum', 'gallery',
-    'park', 'trail', 'beach', 'hike', 'shop', 'store', 'attraction'
+    'park', 'trail', 'beach', 'hike', 'shop', 'store', 'attraction', 'location',
+    'ice cream', 'food', 'coffee', 'view', 'place',
+    // Recommendations
+    'recommend', 'suggestion', 'suggest', 'best', 'favorite', 'good place',
+    'check out', 'worth visiting', 'great place', 'love this', 'explore',
+    'where to', 'looking for', 'anyone know'
   ]
 
-  const recommendationKeywords = [
-    'recommend', 'suggestion', 'best', 'favorite', 'hidden gem', 'must visit',
-    'check out', 'worth visiting', 'great place', 'love this place'
-  ]
-
-  // Check if post contains activity-relevant keywords
-  const hasEventKeywords = eventKeywords.some(keyword => content.includes(keyword))
-  const hasPlaceKeywords = placeKeywords.some(keyword => content.includes(keyword))
-  const hasRecommendationKeywords = recommendationKeywords.some(keyword => content.includes(keyword))
-
-  // Filter out common non-activity posts
+  // Simplified exclude keywords
   const excludeKeywords = [
     'housing', 'apartment', 'rent', 'roommate', 'job', 'hiring',
-    'for sale', 'selling', 'buy', 'traffic', 'politics', 'news'
+    'for sale', 'selling', 'buy', 'traffic', 'politics', 'stench', 'hate'
   ]
+
+  // Check for activity keywords
+  const hasActivityKeywords = activityKeywords.some(keyword => content.includes(keyword))
+  
+  // Check for exclude keywords
   const hasExcludeKeywords = excludeKeywords.some(keyword => content.includes(keyword))
 
-  return (hasEventKeywords || hasPlaceKeywords || hasRecommendationKeywords) && 
+  // More lenient scoring and filtering
+  return hasActivityKeywords && 
          !hasExcludeKeywords &&
-         postData.score > 5 && // Minimum upvotes
+         postData.score >= 5 && // Keep minimum score requirement
          !postData.over_18    // No NSFW content
 }
 
