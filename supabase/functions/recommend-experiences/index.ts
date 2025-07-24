@@ -1,4 +1,4 @@
-iimport { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 serve(async (req) => {
@@ -128,10 +128,10 @@ serve(async (req) => {
 
     // Generate context analysis
     const contextAnalysis = {
-      timing: generateTimingAnalysis(currentHour),
+      timing: generateTimingAnalysis(new Date().getHours()),
       weather: "Great conditions", // Could integrate weather API
       availability: `Found ${recommendations.length} personalized recommendations`,
-      personalization_factors: Object.keys(personality).filter(key => personality[key] > 0.5),
+      personalization_factors: Object.keys(user.personality_profile || {}).filter(key => (user.personality_profile || {})[key] > 0.5),
       location_context: userLocation
     }
 
@@ -144,7 +144,7 @@ serve(async (req) => {
         context_analysis: contextAnalysis,
         user_profile_used: {
           has_preferences: Object.keys(preferences).length > 0,
-          has_personality: Object.keys(personality).length > 0,
+          has_personality: Object.keys(user.personality_profile || {}).length > 0,
           past_feedback_count: pastFeedback?.length || 0
         }
       }),
