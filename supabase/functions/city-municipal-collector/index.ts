@@ -123,85 +123,24 @@ serve(async (req) => {
 
 function generateMunicipalUrls(city: string, region: string, country: string): any[] {
   const cityLower = city.toLowerCase().replace(/\s+/g, '')
-  const citySlug = city.toLowerCase().replace(/\s+/g, '-')
-  const regionLower = region.toLowerCase()
   
-  const urls: any[] = []
-
-  // 1. Main City Government
-  const cityPatterns = [
-    `https://www.${cityLower}.ca`,
-    `https://www.${cityLower}.gov`,  
-    `https://www.${cityLower}.org`,
-    `https://${cityLower}.ca`,
-    `https://city.${cityLower}.ca`,
-    `https://www.city-${citySlug}.ca`
-  ]
-
-  for (const baseUrl of cityPatterns) {
-    urls.push({ url: `${baseUrl}/recreation`, type: 'city_recreation' })
-    urls.push({ url: `${baseUrl}/parks-recreation`, type: 'city_parks' })
-    urls.push({ url: `${baseUrl}/events`, type: 'city_events' })
-    urls.push({ url: `${baseUrl}/programs`, type: 'city_programs' })
-    urls.push({ url: `${baseUrl}/activities`, type: 'city_activities' })
-    urls.push({ url: `${baseUrl}/community`, type: 'city_community' })
-  }
-
-  // 2. Regional Districts/Counties
-  if (region) {
-    const regionalPatterns = [
-      `https://www.${regionLower}.ca`,
-      `https://${regionLower}.ca`,
-      `https://www.${regionLower}.gov`
+  // Start with ONLY verified working URLs for Victoria
+  if (city.toLowerCase() === 'victoria' && region.toLowerCase() === 'bc') {
+    return [
+      { url: 'https://www.victoria.ca/EN/main/residents/recreation.html', type: 'city_recreation' },
+      { url: 'https://www.saanich.ca/EN/main/parks-recreation-culture/recreation.html', type: 'regional_recreation' },
+      { url: 'https://www.oakbay.ca/parks-recreation/programs-activities', type: 'community_programs' },
+      { url: 'https://gvpl.ca/events/', type: 'library_events' }
     ]
-
-    for (const baseUrl of regionalPatterns) {
-      urls.push({ url: `${baseUrl}/recreation`, type: 'regional_recreation' })
-      urls.push({ url: `${baseUrl}/events`, type: 'regional_events' })
-      urls.push({ url: `${baseUrl}/parks`, type: 'regional_parks' })
-    }
   }
-
-  // 3. Public Libraries
-  const libraryPatterns = [
-    `https://${cityLower}library.ca/events`,
-    `https://www.${cityLower}library.ca/events`,
-    `https://${cityLower}library.org/events`,
-    `https://library.${cityLower}.ca/events`,
-    `https://${cityLower}.bibliocommons.com/events`
+  
+  // For other cities, use basic patterns (limit to 4 URLs to prevent timeout)
+  return [
+    { url: `https://www.${cityLower}.ca/recreation`, type: 'city_recreation' },
+    { url: `https://www.${cityLower}.ca/events`, type: 'city_events' },
+    { url: `https://${cityLower}library.ca/events`, type: 'library_events' },
+    { url: `https://www.${cityLower}.gov/parks-recreation`, type: 'city_parks' }
   ]
-
-  libraryPatterns.forEach(url => {
-    urls.push({ url, type: 'library_events' })
-  })
-
-  // 4. Community Centers
-  const communityPatterns = [
-    `https://${cityLower}rec.ca`,
-    `https://www.${cityLower}rec.ca`,
-    `https://${cityLower}recreation.ca`,
-    `https://rec.${cityLower}.ca`
-  ]
-
-  communityPatterns.forEach(url => {
-    urls.push({ url: `${url}/programs`, type: 'community_programs' })
-    urls.push({ url: `${url}/events`, type: 'community_events' })
-  })
-
-  // 5. Arts & Culture Venues
-  const culturePatterns = [
-    `https://${cityLower}arts.ca`,
-    `https://${cityLower}theatre.ca`,
-    `https://${cityLower}museum.ca`,
-    `https://arts.${cityLower}.ca`
-  ]
-
-  culturePatterns.forEach(url => {
-    urls.push({ url: `${url}/events`, type: 'culture_events' })
-    urls.push({ url: `${url}/shows`, type: 'culture_shows' })
-  })
-
-  return urls
 }
 
 async function isUrlAccessible(url: string): Promise<boolean> {
